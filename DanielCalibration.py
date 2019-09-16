@@ -34,19 +34,21 @@ previous_reading = mcp3428.take_single_recording(0)
 
 #steps to follow
 #1. While loop that keeps on going through
+print 'Press ctrl-C to exit...'
+
 while True:
-        counter = 0;
-        start = time.time()
-        end = time.time()
-        breakSafe = True
-        while end-start <= 60:
-                iStart = time.time
+        counter = 0; #inititaite counter for checking the rate at zero
+        start = time.time() #start time of loop
+        end = time.time() #end time
+        breakSafe = True #initiate boolean for the loop break
+        while end-start <= 60: #monitor the voltage recording for a minute
+                iStart = time.time #start of recording
                 previous_reading = mcp3428.take_single_recording(0)
                 time.sleep(1)
                 current_reading = mcp3428.take_single_recording(0)
-                end = time.time()
-                rate = (current_reading - previous_reading)/(end - iStart)
-                
+                end = time.time() #end recording
+                rate = (current_reading - previous_reading)/(end - iStart) #calculate the instantaneous rate of the voltage increase
+                #print the rate and the readings
                 print 'The Recording:'
                 print current_reading
                 print '\r\n'
@@ -58,83 +60,30 @@ while True:
                 print '------------'
                 print '\r\n'
                 
-                if (rate>1):
+                if (rate>1): #if the rate exceeds 1 volt per second, as in it jumps past the increase in voltage, it will be done.
                         breakSafe = False
                         break
                 if (rate == 0);
                         counter += 1
-                        if counter == 5:
+                        if counter == 5: #if the readings are the same for 5 seconds, we will break and bump
                                 breakSafe = True
                                 break
-        finalVoltage = mcp3428.take_single_recording(0)
-        if BreakSafe:
-                voltage += 1
-                bit = voltage/conversion_factor
-                time.sleep(0.01)
-                dac.set_voltage(bit)
+        finalVoltage = mcp3428.take_single_recording(0) # final voltage level
+        
+        if BreakSafe: #if the loop was not broken unsafely, then it is fine
+                voltage += 1 #increment voltage by 1
+                bit = voltage/conversion_factor #convert to bit through the conversion factor found in the python file
+                time.sleep(0.01) #rest
+                dac.set_voltage(bit) #set voltage through the dac
                 print 'Increasing Voltage by 1'
                 time.sleep(0.01)
-        else:
+        else: #if BreakSafe is false, then the voltage will step back down and rest for a minute
                 voltage -= 1
                 bit = voltage/conversion_factor
                 time.sleep(0.01)
                 dac.set_voltage(bit)
                 print 'Decreasing Voltage by 1'
-                time.sleep(0.01)
-        if 
-#2. second while loop that goes until it levels off or goes too fast ( like a minute or so )
-#2a. start timer
-#2b. get reading
-#2c. wait for a second
-#2d. get second reading
-#2e. end timer
-#2f. calculate rate
-#2g. print rate and print reading
-#2h. if the rate is too fast break and set breakUnsafe to 1
-#2i. if the rate is zero add 1 to the counter
-#2j. if the counter reaches 5, set breakSafe to 1
-#2h. end the inner loop
-#3.If statement
-#3a. breakSafe = 1
-#3ai. set voltage Up one
-#3b. breakUnsafe = 1
-#3bi. set the new voltage down 1
-#Go bakc to the start of the loop
+                time.sleep(60)
 
 
 
-print('Press Ctrl-C to quit...')
-while True:
-    #Get the reading on just on channel, channel 0 is the first channel on the device.
-    #get the rate at which the voltage increased
-    current_reading = mcp3428.take_single_recording(0) #channel 0 reading from adc
-    end = time.time()#end timer
-    time_interval = end - start #find duration of timer
-    rate = (current_reading - previous_reading)/time_interval #math to find rate of voltage increase
-    save_reading = current_reading
-    
-    print 'Channel 0 reading: '
-    print current_reading
-    print '\r\n'
-    print 'Rate of Increase: '
-    print rate
-    print '\r\n'
-
-    if (rate > 2): # change to a waiting period to level out the voltage after the current spike
-        voltage -= 1
-        bit = voltage/conversion_factor
-        time.sleep(0.01)
-        dac.set_voltage(bit)
-        time.sleep(0.01)
-    elif (rate == 0):
-        voltage += 1
-        bit = voltage/conversion_factor
-        time.sleep(0.01)
-        dac.set_voltage(bit)
-        print 'Increasing Voltage by 1'
-        time.sleep(0.01)
-
-    start = time.time()
-    time.sleep(1)
-
-while 
