@@ -68,7 +68,16 @@ while True:
                         if counter == 5: #if the readings are the same for 5 seconds, we will break and bump
                                 breakSafe = True
                                 break
-        finalVoltage = mcp3428.take_single_recording(0) # final voltage level
+                                
+                 # now if the voltage is at about 1800, we need to keep it constant
+                # the purpose of this look is to stop the loop from going on forever and for it to stop in the voltage range we need it to
+                #so that's why I'm having it print the voltage it has so we know to make adjustments or not
+               if mcp3428.take_single_recording(0) = range(1795,1810)
+                print mcp3428.take_single_recording(0)
+                        then mcp3428.take_single_recording(0) = finalVoltage
+       
+
+#finalVoltage = mcp3428.take_single_recording(0) # final voltage level
         
         if BreakSafe: #if the loop was not broken unsafely, then it is fine
                 voltage += 1 #increment voltage by 1
