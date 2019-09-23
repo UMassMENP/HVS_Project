@@ -23,73 +23,86 @@ mcp3428 = mcp3428.MCP3428(bus, kwargs)
 dac = Adafruit_MCP4725.MCP4725(address=0x60, busnum=1)
 
 #Initialization of variables
-previous_reading = 0
-current_reading = 0
+
 conversion_factor = .002 #How the readings change when they get read into and out of the ADC
 voltage = 0
 dac.set_voltage(0) #set the voltage to zero through the dac instance
 set_voltage = True
-start = time.time() #start the timer to step up the Voltage
-previous_reading = mcp3428.take_single_recording(0)
+
 
 #steps to follow
 #1. While loop that keeps on going through
-print 'Press ctrl-C to exit...'
+print ('Press ctrl-C to exit...')
 
 while True:
-        counter = 0; #inititaite counter for checking the rate at zero
-        start = time.time() #start time of loop
-        end = time.time() #end time
-        breakSafe = True #initiate boolean for the loop break
-        while end-start <= 60: #monitor the voltage recording for a minute
-                iStart = time.time #start of recording
-                previous_reading = mcp3428.take_single_recording(0)
+    voltage += 1
+    print ('increasing voltage to' + voltage)
+    print ('\r\n')
+    print ('------------')
+    print('\r\n')
+    print ('Voltage: ' + mcp3428.take_single_recording(0))
+    print('\r\n')
+    print('------------')
+    print('\r\n')
+    previous_reading = mcp3428.take_single_recording(0)
+    start = time.time() #start time of loop
+    time.sleep(0.1)
+    current_reading = mcp3428.take_single_reading(0)
+    end = time.time() #end time
+    rate = (current_reading - previous_reading)/(end - start)
+
+    if rate > 1: #if the rate exceeds 1 volt per second, as in it jumps past the increase in voltage, it will be done.
+        voltage -= 1
+        bit = voltage / conversion_factor
+        time.sleep(0.01)
+        dac.set_voltage(bit)
+        print('Decreasing Voltage by 1')
+        print('\r\n')
+        print('------------')
+        print('\r\n')
+        print('Voltage: ' + mcp3428.take_single_reading(0))
+        print('\r\n')
+        print('------------')
+        print('\r\n')
+        time.sleep(60)
+    else:
+        time.sleep(.9)
+
+    while current_reading > 1799:
+        while True:
+            current_reading = mcp3428.take_single_reading(0)
+            if current_reading < 1800:
+                breakDirection = False
+                break
+            elif current_reading > 1800:
+                breakDirection = True
+                break
+        if ~breakDirection:
+            break
+        elif breakDirection:
+            the_read = current_reading
+            while the_read > 1801:
+                voltage -= 1
+                bit = voltage / conversion_factor
+                time.sleep(0.01)
+                dac.set_voltage(bit)
                 time.sleep(1)
-                current_reading = mcp3428.take_single_recording(0)
-                end = time.time() #end recording
-                rate = (current_reading - previous_reading)/(end - iStart) #calculate the instantaneous rate of the voltage increase
-                #print the rate and the readings
-                print 'The Recording:'
-                print current_reading
-                print '\r\n'
-                print '------------'
-                print '\r\n'
-                print 'The rate:'
-                print rate
-                print '\r\n'
-                print '------------'
-                print '\r\n'
-                
-                if (rate>1): #if the rate exceeds 1 volt per second, as in it jumps past the increase in voltage, it will be done.
-                        breakSafe = False
-                        break
-                if (rate == 0);
-                        counter += 1
-                        if counter == 5: #if the readings are the same for 5 seconds, we will break and bump
-                                breakSafe = True
-                                break
+                the_read = mcp3428.take_single_reading(0)
+                print('Decreasing Voltage by 1:')
+                print('\r\n')
+                print('------------')
+                print('\r\n')
+                print('Voltage: ' + the_read)
+
+
+
                                 
                  # now if the voltage is at about 1800, we need to keep it constant
                 # the purpose of this look is to stop the loop from going on forever and for it to stop in the voltage range we need it to
                 #so that's why I'm having it print the voltage it has so we know to make adjustments or no
         
-        if BreakSafe: #if the loop was not broken unsafely, then it is fine
-                if (current_reading > 1795) && ( current_reading < 1805 ):
-                        while (current_reading > 1795) && ( current_reading < 1805 ):
-                                
-                voltage += 1 #increment voltage by 1
-                bit = voltage/conversion_factor #convert to bit through the conversion factor found in the python file
-                time.sleep(0.01) #rest
-                dac.set_voltage(bit) #set voltage through the dac
-                print 'Increasing Voltage by 1'
-                time.sleep(0.01)
-        else: #if BreakSafe is false, then the voltage will step back down and rest for a minute
-                voltage -= 1
-                bit = voltage/conversion_factor
-                time.sleep(0.01)
-                dac.set_voltage(bit)
-                print 'Decreasing Voltage by 1'
-                time.sleep(60)
+
+
 
 
 
