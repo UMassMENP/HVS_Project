@@ -71,15 +71,12 @@ while True:
                                 
                  # now if the voltage is at about 1800, we need to keep it constant
                 # the purpose of this look is to stop the loop from going on forever and for it to stop in the voltage range we need it to
-                #so that's why I'm having it print the voltage it has so we know to make adjustments or not
-               if mcp3428.take_single_recording(0) = range(1795,1810)
-                print mcp3428.take_single_recording(0)
-                        then mcp3428.take_single_recording(0) = finalVoltage
-       
-
-#finalVoltage = mcp3428.take_single_recording(0) # final voltage level
+                #so that's why I'm having it print the voltage it has so we know to make adjustments or no
         
         if BreakSafe: #if the loop was not broken unsafely, then it is fine
+                if (current_reading > 1795) && ( current_reading < 1805 ):
+                        while (current_reading > 1795) && ( current_reading < 1805 ):
+                                
                 voltage += 1 #increment voltage by 1
                 bit = voltage/conversion_factor #convert to bit through the conversion factor found in the python file
                 time.sleep(0.01) #rest
