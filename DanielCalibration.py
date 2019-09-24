@@ -36,6 +36,9 @@ print ('Press ctrl-C to exit...')
 
 while True:
     voltage += 1
+    bit = voltage / conversion_factor
+    time.sleep(0.01)
+    dac.set_voltage(bit)
     print ('increasing voltage to' + voltage)
     print ('\r\n')
     print ('------------')
@@ -54,7 +57,6 @@ while True:
     if rate > 1: #if the rate exceeds 1 volt per second, as in it jumps past the increase in voltage, it will be done.
         voltage -= 1
         bit = voltage / conversion_factor
-        time.sleep(0.01)
         dac.set_voltage(bit)
         print('Decreasing Voltage by 1')
         print('\r\n')
