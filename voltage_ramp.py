@@ -1,75 +1,110 @@
+
+# file: voltage_ramp.py
+# brief: Sets ramp for the High Voltage Supply
+
 import time
-
 import random
-#Import the module
 import Adafruit_MCP4725
-
-#import the ADC module class
 import mcp3428
 import smbus
+import numpy as np
 
 # create bus object
 bus = smbus.SMBus(1)
 # create a dictionary of addresses and information needed for the ADC instance
 kwargs = {'address': 0x68, 'mode': 0x10, 'sample_rate': 0x08, 'gain':0x00}
 
-# crate a ADC instance directing towards the bus with the addresses located in kwargs
+# crate a ADC instance
 mcp3428 = mcp3428.MCP3428(bus, kwargs)
 
-# Create a DAC instance...whatever that means
-dac = Adafruit_MCP4725.MCP4725(address=0x60, busnum=1)
+# Create a DAC instance, initializing the class in this file
+# the dac variable names correspond to the addresses to the dac's in DECIMAL, while the
+# address given in the actual call for the MCP4725 class is in HEXADECIMAL
 
-# steps to follow
+#Voltage Dac
+dac96 = Adafruit_MCP4725.MCP4725(address=0x60, busnum=1)
+
+#Max Current Dac
+dac97 = Adafruit_MCP4725.MCP4725(address=0x61, busnum=1)
 
 
-# start the ramp time, this will be the basis for the slope of the ramp we are running up
-
-# go through the ramp until it hits 1800 volts
-#definesa function for the ramp by increment and decrement and the time per increment that we want.
-def voltage_ramp(increment, decrement, seconds):
-    #sets voltage to zero
-    voltage = 0
-    #conversion factor of our dac and adc
-    conversion_factor = 0.002
-    #set the voltage to zero
-    dac.set_voltage(voltage)
-
-    #Try it now, this is where the trip will be but I am working on it
-    ###starttime = time.time()
-    # sleep time for when the trip is enacted
-    ###sleeptime = 0
+def voltage_ramp(goalVoltage):
     
-    #start timer
+    bitVoltage = 0
+    bitCurrent = 4095
+    
+    convVolt = 0.0025156
+    convCurr = 0.0023887
+
+    voltageConversion = 300
+    
+    
+    # set the voltage to zero. Since the DAC recieves a voltage in bits,
+    # and is twelve bits (12 bits), the range
+    # we can set these to are between 0 and 4095 for voltages that range from 0 V to 10 V.
+    print('------------')
+    print('Voltage set to 0 V...')
+    print('------------')
+    print('Max Current Set to 3.3 mA')
+    print('------------')
+    
+    dac96.set_voltage(bitVoltage)
+    dac97.set_voltage(bitCurrent)   
+    
+    # start timer: we need timers to regulate the rate at which the high voltage is incremented
+    
     prevTime = time.time()
+
     #begin while loop of increments and decrements
     while 1:
-        # read the voltage and interval, the
-        voltageReading = mcp3428.take_single_recording(0)
-        voltage = voltageReading
-        
+        # read the voltage at the beginning of each iteration.
+        # these readings are from 0 to 10 V, so convert wisel
+
         #get the livetime and what until 1 second passes
         livetime = time.time()
-        if livetime-prevTime < seconds:
+        if livetime-prevTime < 2:
             continue
 
+        voltageReading = mcp3428.take_single_reading(0)
+        voltage = voltageReading * voltageConversion
+
+        currentReading = mcp3428.take_single_reading(1)
+        
         #resets the prevTime variable for the next increment
         prevTime = livetime
-        print('voltage: ' + str(voltage))
+        print('-----------------------------')        
+        print('voltage (0 to 3000 V): ' + str(voltage))
+        print('-----------------------------')
+        print('max current (0 to 10 V): ' + str(currentReading))
+        print('-----------------------------')
+                
+        if voltage < goalVoltage:
+            bitVoltage += 1
+            print('bit: ' + str(bitVoltage))
+            print('-----------------------------')
+            dac96.set_voltage(bitVoltage)
+        else:
+            hold_value(goalVoltage, bitVoltage)
 
-        if voltage < 1800:
-            voltage = voltage + increment
-            bit = voltage / conversion_factor
-            print('bit: ' + str(bit))
-            dac.set_voltage(bit)
 
-        elif voltage > 1800:
-            voltage = voltage-decrement
-            bit = voltage / conversion_factor
-            print('bit: ' + str(bit))
-            dac.set_voltage(bit)
+def hold_value(goalVoltage, bitVoltage):
+    print('Holding at ' + str(goalVoltage) + 'Volts.....')
+    while 1:
+        voltageReading = mcp3428.take_single_reading(0)
+        voltage = voltageReading * voltageConversion
+        
+        if voltage < (goalVoltage - 2):
+            bitVoltage += 1
+            dac96.set_voltage(bitVoltage)
+        elif voltage > (goalVoltage + 2):
+            bitvoltage -= 1
+            dac96.set_voltage(bitVoltage)
         else:
             continue
-
+        
 #reset the parameters of the ramp below, then run the function voltage_ramp.exe
 if __name__ == '__main__':
-    voltage_ramp(1, 1, 1)
+    print('Voltage Ramp')
+    print('\r\n')
+    goalVoltage = int(input('Enter high voltage amount: '))
+    voltage_ramp(goalVoltage)
