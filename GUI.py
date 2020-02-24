@@ -2,13 +2,12 @@
 #Please update the date and time here so we can keep track of the newest copy:
 #Version: Feb 24, 2020 13:00
 #TODO:
-#1)Formatting (.pack() vs .grid())
 #2)Error for voltage range
 #3)Begin implementing voltage ramp function
 #3a)All the print functions should be formatted to a text box
 #4)NOT URGENT - More comments
-from Tkinter import *
-import Tkinter as tk
+from tkinter import *
+import tkinter as tk
 
 mainWindow = Tk()
 #master window class
@@ -18,7 +17,7 @@ class Window(Frame):
 
         self.master = master
 
-        self.pack()#this aligns the widgets
+        #self.pack()#this aligns the widgets
 
         self.init_window()#main window and menu bar
 
@@ -41,13 +40,13 @@ class Window(Frame):
 #this function defines the main page controls
     def main_widgets(self):
         #ramp voltage entry
-        Label(mainWindow, text='Enter Desired Voltage: ').pack()
+        Label(mainWindow, text='Enter Desired Voltage: ').grid(row = 0)
         #Entry bar 
         self.v_Entry = Entry(mainWindow)
-        self.v_Entry.pack()
+        self.v_Entry.grid(row = 0, column = 1)
         #Button to pass entry to ramp voltage function, as to not cause lag
         v_Activate = Button(mainWindow, text="Enter", command=self.ramp_Entry)
-        v_Activate.pack()
+        v_Activate.grid(row = 0, column = 2)
 
 #this function will check if the entered value is an int, float, etc. then pass
 #to voltage ramp function
@@ -67,8 +66,9 @@ class Window(Frame):
                 if self.errlbl:
                     self.errlbl.destroy()
                 self.errlbl = Label(mainWindow, text = 'Error: Entry must be an Integer or Float')
-                self.errlbl.pack()
-        
+                self.errlbl.grid(row = 1)
+        #if rampV < 0 or rampV > 3000:
+            #errlbl2 = Label(mainWindow, text = "Error: Entry must be between 0V and 3000V").grid(row = 2)
 
     def close_window(self):
         exit()
