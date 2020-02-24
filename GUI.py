@@ -6,8 +6,8 @@
 #3)Begin implementing voltage ramp function
 #3a)All the print functions should be formatted to a text box
 #4)NOT URGENT - More comments
-from tkinter import *
-import tkinter as tk
+from Tkinter import *
+import Tkinter as tk
 
 mainWindow = Tk()
 #master window class
@@ -47,6 +47,13 @@ class Window(Frame):
         #Button to pass entry to ramp voltage function, as to not cause lag
         v_Activate = Button(mainWindow, text="Enter", command=self.ramp_Entry)
         v_Activate.grid(row = 0, column = 2)
+        # Text box that will read out what used to be printed to console
+        self.text_box = Text(mainWindow,height=15,width=45)
+        self.text_box.grid(row=3,column=1)
+        self.text_box.insert(tk.END,'-----\nVoltage set to 0V...\n')
+        self.text_box.insert(tk.END,'-----\nMax Current Set to 3.3 mA\n')
+        self.text_box.insert(tk.END,'-----\n\n')
+        self.text_box.configure(state='disabled')
 
 #this function will check if the entered value is an int, float, etc. then pass
 #to voltage ramp function
@@ -57,11 +64,13 @@ class Window(Frame):
             int(rampV)
             if self.errlbl:
                 self.errlbl.destroy()
+            self.ramp_print_entry(rampV)
         except:
             try:#check if float
                 float(rampV)
                 if self.errlbl:
                     self.errlbl.destroy()
+                self.ramp_print_entry(rampV)
             except:
                 if self.errlbl:
                     self.errlbl.destroy()
@@ -73,9 +82,17 @@ class Window(Frame):
     def close_window(self):
         exit()
 
+    # When ramp_Entry() is called with a valid voltage, print out info to text box
+    def ramp_print_entry(self,voltage):
+        self.text_box.configure(state='normal')
+        self.text_box.insert(tk.END,'----------------\n')
+        self.text_box.insert(tk.END,'voltage (0 to 3000 V): ' + str(voltage) + '\n')
+        self.text_box.insert(tk.END,'----------------\n')
+        self.text_box.configure(state='disabled')
+
 
 #initial size of window:
-mainWindow.geometry("400x300")
+mainWindow.geometry("600x300")
 
 app = Window(mainWindow)
 #mainloop stays at the end
