@@ -35,7 +35,7 @@ conversionCurrent= 3.3/10
 bitVoltage = 0
 dac97.set_voltage(bitVoltage) #set the voltage to zero through the dac instance
 bitCurrent = 0
-dac97.set_voltage(bitCurrent)
+dac96.set_voltage(bitCurrent)
 #steps to follow
 #1. While loop that keeps on going through
 

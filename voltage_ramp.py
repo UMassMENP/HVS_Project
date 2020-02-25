@@ -21,23 +21,21 @@ mcp3428 = mcp3428.MCP3428(bus, kwargs)
 # the dac variable names correspond to the addresses to the dac's in DECIMAL, while the
 # address given in the actual call for the MCP4725 class is in HEXADECIMAL
 
-#Voltage Dac
+#Max Current Dac
 dac96 = Adafruit_MCP4725.MCP4725(address=0x60, busnum=1)
 
-#Max Current Dac
+#voltage Dac
 dac97 = Adafruit_MCP4725.MCP4725(address=0x61, busnum=1)
 
+voltageConversion = 300 * 1800 / 1709
+currentConversion = 3.3/10
+
+        
 
 def voltage_ramp(goalVoltage):
     
     bitVoltage = 0
     bitCurrent = 4095
-    
-    convVolt = 0.0025156
-    convCurr = 0.0023887
-
-    voltageConversion = 300
-    
     
     # set the voltage to zero. Since the DAC recieves a voltage in bits,
     # and is twelve bits (12 bits), the range
@@ -48,8 +46,8 @@ def voltage_ramp(goalVoltage):
     print('Max Current Set to 3.3 mA')
     print('------------')
     
-    dac96.set_voltage(bitVoltage)
-    dac97.set_voltage(bitCurrent)   
+    dac97.set_voltage(bitVoltage)
+    dac96.set_voltage(bitCurrent)   
     
     # start timer: we need timers to regulate the rate at which the high voltage is incremented
     
@@ -62,43 +60,44 @@ def voltage_ramp(goalVoltage):
 
         #get the livetime and what until 1 second passes
         livetime = time.time()
-        if livetime-prevTime < 2:
+        if livetime-prevTime < 1:
             continue
+
+        currentReading = mcp3428.take_single_reading(1)
+        current = currentReading * currentConversion
 
         voltageReading = mcp3428.take_single_reading(0)
         voltage = voltageReading * voltageConversion
-
-        currentReading = mcp3428.take_single_reading(1)
-        
         #resets the prevTime variable for the next increment
         prevTime = livetime
         print('-----------------------------')        
         print('voltage (0 to 3000 V): ' + str(voltage))
         print('-----------------------------')
-        print('max current (0 to 10 V): ' + str(currentReading))
+        print('max current (0 to 10 V): ' + str(current))
         print('-----------------------------')
                 
         if voltage < goalVoltage:
-            bitVoltage += 1
+            bitVoltage += 50
             print('bit: ' + str(bitVoltage))
             print('-----------------------------')
-            dac96.set_voltage(bitVoltage)
+            dac97.set_voltage(bitVoltage)
         else:
             hold_value(goalVoltage, bitVoltage)
 
 
 def hold_value(goalVoltage, bitVoltage):
-    print('Holding at ' + str(goalVoltage) + 'Volts.....')
+    print('Bringing to ' + str(goalVoltage) + 'Volts.....')
     while 1:
         voltageReading = mcp3428.take_single_reading(0)
         voltage = voltageReading * voltageConversion
         
-        if voltage < (goalVoltage - 2):
+        if voltage < (goalVoltage - 1):
             bitVoltage += 1
-            dac96.set_voltage(bitVoltage)
-        elif voltage > (goalVoltage + 2):
-            bitvoltage -= 1
-            dac96.set_voltage(bitVoltage)
+            dac97.set_voltage(bitVoltage)
+        elif voltage > (goalVoltage + 1):
+            bitVoltage -= 1
+            dac97.set_voltage(bitVoltage)
+            print('voltage: ' + str(mcp3428.take_single_reading(0) * voltageConversion))
         else:
             continue
         
