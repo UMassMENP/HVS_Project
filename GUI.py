@@ -8,8 +8,8 @@
 #5)Format py file to executable - last step
 #6)NOT URGENT - ENTER/RETURN key functionality
 #7)Scroll bar to text box for ease
-from Tkinter import *
-import Tkinter as tk
+from tkinter import *
+import tkinter as tk
 #from voltage_ramp import * #do not uncomment until hardware test
 
 mainWindow = Tk()
@@ -57,7 +57,7 @@ class Window(Frame):
 #voltage ramp function
     def r_Entry(self, goalVoltage):
         print(goalVoltage)
-        voltage_ramp(goalVoltage)
+        #voltage_ramp(goalVoltage)
         self.text_box.configure(state = "normal")
         self.text_box.insert(tk.END,'Voltage start at 0 V...\n')
         self.text_box.insert(tk.END,'-----------\n')
