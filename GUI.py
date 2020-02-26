@@ -1,23 +1,19 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[2]:
-
-
 #GUI for the HVS
 #Please update the date and time here so we can keep track of the newest copy:
-#Version: Feb 25, 2020 12:52
+#Version: Feb 26, 2020 17:05
 #TODO:
-#3)Continue implementing voltage ramp function
-#3a)All the print functions should be formatted to a text box
-#3b)Implement functions and prep for hardware test
+#1)More Comments
+#3b)Prep for hardware test
 #5)Format py file to executable - last step
 #6)NOT URGENT - ENTER/RETURN key functionality
 #7)Scroll bar to text box for ease
 from tkinter import *
 import tkinter as tk
 import time
-#from voltage_ramp import * #do not uncomment until hardware test
+from voltage_ramp import *
+import random
+import mcp3428
+import smbus
 
 mainWindow = Tk()
 #master window class
@@ -30,6 +26,16 @@ class Window(Frame):
         self.init_window()#main window and menu bar
 
         self.main_widgets()#objects that inhabit the main page
+
+        bus = smbus.SMBus(1)
+
+        kwargs = {'address': 0x68, 'mode':0x10, 'sample_rate':0x08, 'gain':0x00}
+
+        self.mcp3428 = mcp3428.MCP3428(bus, kwargs)
+
+        self.voltageConversion = 300 * 1800 / 1709
+        self.currentConversion = 3.3/10
+
 # use this function for menu bar and page title
     def init_window(self):
         self.master.title("HVS")
@@ -52,9 +58,9 @@ class Window(Frame):
         self.v_Entry = Entry(mainWindow)
         self.v_Entry.grid(row = 0, column = 1)
         #Button to pass entry to ramp voltage function, as to not cause lag
-        v_Activate = Button(mainWindow, text="Enter", command=self.ramp_Entry_Check)
+        v_Activate = Button(mainWindow, text="Enter", command=self.ramp_Entry_Check())
         v_Activate.grid(row = 0, column = 2)
-        #Text box that will read out what used to be printed to console
+        #Text box that will read out what used to be printed to console 
         self.text_box = Text(mainWindow,height=15,width=45)
         self.text_box.grid(row=3,column=1)
         self.text_box.insert(tk.INSERT,'-----\n\n')
@@ -63,32 +69,100 @@ class Window(Frame):
 
 #voltage ramp function
     def r_Entry(self, goalVoltage):
-        print(goalVoltage)
-        #voltage_ramp(goalVoltage)
-        in_curReading = mcp3428.take_single_reading(1)
-        in_cur = in_curReading * currentConversion
-        in_volReading = mcp3428.take_single_reading(0)
-        in_volt = in_volReading * voltageConversion
+        #initial current and voltage readings passed from the ADC and passed through conversion
+        in_curReading = self.mcp3428.take_single_reading(1)
+        in_cur = in_curReading * self.currentConversion
+        in_volReading = self.mcp3428.take_single_reading(0)
+        in_volt = in_volReading * self.voltageConversion
+        #check for ramp up or ramp down 
+        if goalVoltage > in_volt:
+            voltage_ramp_up(goalVoltage)
+            ramp_up = True
+        else:
+            voltage_ramp_down(goalVoltage)
+            ramp_down = True
+        #print initial values to textbox
         self.text_box.configure(state = "normal")
         self.text_box.insert(tk.END,'Voltage start at ' + str(in_volt) + '...\n')
         self.text_box.insert(tk.END,'-----------\n')
-        self.text_box.insert(tk.END,'Max Current Set to ' + str(current) + '\n')
+        self.text_box.insert(tk.END,'Max Current Set to ' + str(in_cur) + '\n')
         self.text_box.insert(tk.END,'-----------\n')
         self.text_box.configure(state='disabled')
+
+        #time functions to generate clock and update text box
         prevT = time.time()
-        while 1:
+        #if ramp up function is called the following loop starts
+        while ramp_up = True:
+            liveT = time.time()
+
+            #to make sure there is a second between each clock
+            if liveT - prevT < 1:
+                continue
+            #takes new readings every pass to print updated information
+            curReading = self.mcp3428.take_single_reading(1)
+            cur = curReading * self.currentConversion
+            volReading = self.mcp3428.take_single_reading(0)
+            volt = volReading * self.voltageConversion
+            #update time:
+            prevTime = livetime
+            #print readings from ADC
+            self.text_box.configure(state = "normal")
+            self.text_box.insert(tk.END, 'Voltage: ' + str(volt) + "\n")
+            self.text_box.insert(tk.END, '-------------------\n')
+            self.text_box.insert(tk.END, 'Max Current: ' + str(cur) + "\n")
+            self.text_box.insert(tk.END, '-------------------\n')
+            self.text_box.configure(state = "disabled")
+            #end printing if done or continue loop
+            if volt > goalVoltage:
+                ramp_up = False
+                hold_value_print(goalVoltage)
+            else:
+                continue
+
+        while ramp_down = True: #this loop mirrors the ramp up printing
             liveT = time.time()
             if liveT - prevT < 1:
                 continue
-                
-            curReading = mcp3428.take_single_reading(1)
-            cur = curReading * currentConversion
-            volReading = mcp3428.take_single_reading(0)
-            volt = volReading * voltageConversion
-            prevTime = livetime
-            if goalVoltage < 
-                
 
+            curReading = self.mcp328.take_single_reading(1)
+            cur = curReading * self.currentConversion
+            volReading = self.mcp3428.take_single_reading(0)
+            volt = volReading * self.voltageConversion
+            prevTime = livetime
+
+            self.text_box.configure(state = "normal")
+            self.text_box.insert(tk.END, 'Voltage: ' + str(volt) + "\n")
+            self.text_box.insert(tk.END, '-------------------\n')
+            self.text_box.insert(tk.END, 'Max Current: ' + str(cur) + "\n")
+            self.text_box.insert(tk.END, '-------------------\n')
+            self.text_box.configure(state = "disabled")
+
+            if volt < goalVoltage:
+                ramp_down = False
+                hold_value_print(goalVoltage)
+            else:
+                continue
+
+    def hold_value_print(self,goalVoltage):#prints the hold value parameters and information
+        self.text_box.configure(state = "normal")
+        self.text_box.insert(tk.END, 'Bringing to ' + str(goalVoltage) + "Volts.....")
+        self.text_box.configure(state = 'disabled')
+        while True:
+            volt_check = self.mcp3428.take_single_reading(0)
+            volts = volt_check * self.voltageConversion
+
+            if volts < (goalVoltage - 1):
+                self.text_box.configure(state = "normal")
+                self.text_box.insert(tk.END, "Voltage: " + str(self.mcp3428.take_single_reading(0) * voltageConversion))
+                self.text_box.configure(state = "disabled")
+            elif volts > (goalVoltage + 1):
+                self.text_box.configure(state = "normal")
+                self.text_box.insert(tk.END, "Voltage: " +str(self.mcp3428.take_single_reading(0) *voltageConversion))
+                self.text_box.configure(state = "disabled")
+            else:
+                continue
+        
+        
 #this function will check if the entered value is an int, float, etc. then pass
 #to voltage ramp function
     def ramp_Entry_Check(self):
@@ -119,7 +193,7 @@ class Window(Frame):
                 self.text_box.insert(tk.END,'Voltage increasing to : ' + str(rampV) + '\n')
                 self.text_box.insert(tk.END, '----------------\n')
                 self.text_box.configure(state='disabled')        
-#menu functions
+#individual menu functions
     def close_window(self):
         exit()
 #When ramp_Entry() is called with a valid voltage, print out info to text box
@@ -132,15 +206,10 @@ class Window(Frame):
 
 #initial size of window:
 mainWindow.geometry("600x300")
-
 app = Window(mainWindow)
-
 
 #mainloop stays at the end
 mainWindow.mainloop()
-
-
-# In[ ]:
 
 
 
