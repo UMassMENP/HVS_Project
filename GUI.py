@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[2]:
+
+
 #GUI for the HVS
 #Please update the date and time here so we can keep track of the newest copy:
 #Version: Feb 25, 2020 12:52
@@ -10,6 +16,7 @@
 #7)Scroll bar to text box for ease
 from tkinter import *
 import tkinter as tk
+import time
 #from voltage_ramp import * #do not uncomment until hardware test
 
 mainWindow = Tk()
@@ -58,13 +65,29 @@ class Window(Frame):
     def r_Entry(self, goalVoltage):
         print(goalVoltage)
         #voltage_ramp(goalVoltage)
+        in_curReading = mcp3428.take_single_reading(1)
+        in_cur = in_curReading * currentConversion
+        in_volReading = mcp3428.take_single_reading(0)
+        in_volt = in_volReading * voltageConversion
         self.text_box.configure(state = "normal")
-        self.text_box.insert(tk.END,'Voltage start at 0 V...\n')
+        self.text_box.insert(tk.END,'Voltage start at ' + str(in_volt) + '...\n')
         self.text_box.insert(tk.END,'-----------\n')
-        self.text_box.insert(tk.END,'Max Current Set to 3.3 mA\n')
+        self.text_box.insert(tk.END,'Max Current Set to ' + str(current) + '\n')
         self.text_box.insert(tk.END,'-----------\n')
         self.text_box.configure(state='disabled')
-        
+        prevT = time.time()
+        while 1:
+            liveT = time.time()
+            if liveT - prevT < 1:
+                continue
+                
+            curReading = mcp3428.take_single_reading(1)
+            cur = curReading * currentConversion
+            volReading = mcp3428.take_single_reading(0)
+            volt = volReading * voltageConversion
+            prevTime = livetime
+            if goalVoltage < 
+                
 
 #this function will check if the entered value is an int, float, etc. then pass
 #to voltage ramp function
@@ -115,3 +138,10 @@ app = Window(mainWindow)
 
 #mainloop stays at the end
 mainWindow.mainloop()
+
+
+# In[ ]:
+
+
+
+
